@@ -1,11 +1,11 @@
 package actors
 
-import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
+import akka.actor.{ Actor, ActorLogging, ActorSystem, Props }
 import akka.routing.RoundRobinPool
 import akka.stream.ActorMaterializer
 import akka.stream.alpakka.sqs.SqsSourceSettings
 import akka.stream.alpakka.sqs.scaladsl.SqsSource
-import akka.stream.scaladsl.{Flow, Sink, Source}
+import akka.stream.scaladsl.{ Flow, Sink, Source }
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.amazonaws.services.sqs.model.Message
@@ -15,8 +15,8 @@ import scala.concurrent.duration._
 import scala.util.Random
 
 /**
-  * Created by fscoward on 2017/06/16.
-  */
+ * Created by fscoward on 2017/06/16.
+ */
 object MySupervisorActor extends MySupervisorActor {
   def props = Props[MySupervisorActor]
 }
@@ -26,7 +26,7 @@ class MySupervisorActor extends Actor with ActorLogging with SqsBase {
   implicit val executionContext = system.dispatcher
 
   // 子Actorを指定
-//  val p = context.actorOf(RoundRobinPool(5).props(Props[MyActor]), "my-actor")
+  //  val p = context.actorOf(RoundRobinPool(5).props(Props[MyActor]), "my-actor")
 
   for (i <- 0 to 20) {
     sqsClient.sendMessage(queueUrl, s"No.$i")
@@ -40,7 +40,6 @@ class MySupervisorActor extends Actor with ActorLogging with SqsBase {
     Future.successful(message)
   }
 
-
   val delete = Flow[Message].mapAsyncUnordered(4) { message =>
     Thread.sleep((Random.nextInt(5) second).toMillis)
     sqsClient.deleteMessage(queueUrl, message.getReceiptHandle)
@@ -49,17 +48,17 @@ class MySupervisorActor extends Actor with ActorLogging with SqsBase {
 
   val sink = Sink.foreachParallel[Message](4)(message => log.debug(s"Sink: ${message.getBody}"))
 
-//  source.via(mapC).via(delete).runWith(sink)
+  //  source.via(mapC).via(delete).runWith(sink)
   source.async.via(convert).async.via(delete).runWith(sink)
 
-
   override def preStart(): Unit = {
-    println (s"[preStart] Supervisor") }
-  override def postStop(): Unit = { println (s"[postStop] Supervisor") }
+    println(s"[preStart] Supervisor")
+  }
+  override def postStop(): Unit = { println(s"[postStop] Supervisor") }
   override def receive: Receive = {
     case message: Message => {
       log.debug("HELLO")
-//      sqsClient.deleteMessageAsync(queueUrl, message.getReceiptHandle)
+      //      sqsClient.deleteMessageAsync(queueUrl, message.getReceiptHandle)
 
     }
   }
@@ -73,14 +72,14 @@ class MyActor extends Actor with ActorLogging {
 
   val p = context.actorOf(Props[DeleteMessageActor], "delete-message-actor")
 
-  override def preStart(): Unit = { println (s"[preStart] Child Actor") }
-  override def postStop(): Unit = { println (s"[postStop] Child Actor") }
+  override def preStart(): Unit = { println(s"[preStart] Child Actor") }
+  override def postStop(): Unit = { println(s"[postStop] Child Actor") }
   override def receive: Receive = {
     case message: Message => {
-//      log.debug(s"[message]=${message.getBody}, [receipt]=${message.getReceiptHandle}")
+      //      log.debug(s"[message]=${message.getBody}, [receipt]=${message.getReceiptHandle}")
       log.debug(s"[message]=${message.getBody}")
       Thread.sleep((3 second).toMillis)
-//      sender() ! message
+      //      sender() ! message
       p ! message
     }
   }

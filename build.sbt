@@ -13,6 +13,8 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.12",
   "com.typesafe.akka" %% "akka-slf4j" % "2.4.2" ,
   "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % "0.3",
+  "com.lightbend.akka" %% "akka-stream-alpakka-s3" % "0.9",
+  "io.findify" %% "s3mock" % "0.2.2" % "test",
 
 
 
