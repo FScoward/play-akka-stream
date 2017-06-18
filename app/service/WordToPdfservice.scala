@@ -13,6 +13,13 @@ import scala.concurrent.Future
 
 /**
  * Created by fscoward on 2017/06/18.
+ *
+ * TODO
+ * - [x] SQSからキューを読み取る
+ * - [ ] S3ファイルをダウンロードする
+ * - [ ] PDFへの変換を行う
+ * - [ ] キューを消す
+ *
  */
 @Singleton
 class WordToPdfservice @Inject() (
@@ -23,6 +30,11 @@ class WordToPdfservice @Inject() (
   implicit val executionContext = system.dispatcher
 
   val source = SqsSource(queueUrl = queueUrl, sqsSourceSettings)
+
+  val download: Flow[Message, Message, NotUsed] = Flow[Message].mapAsyncUnordered(4) { message =>
+    //        s3Service.contents
+    Future.successful(message)
+  }
 
   val convert: Flow[Message, Message, NotUsed] = Flow[Message].mapAsyncUnordered(4) { message =>
     println(s"convert [message]=${message.getBody}")
@@ -35,13 +47,8 @@ class WordToPdfservice @Inject() (
     Future.successful(message)
   }
 
-  val download: Flow[Message, Message, NotUsed] = Flow[Message].mapAsyncUnordered(4) { message =>
-    //    s3Service.contents
-    Future.successful(message)
-  }
-
   val sink = Sink.foreachParallel[Message](4)(message => println(s"Sink: ${message.getBody}"))
 
-  source.async.via(download).async.via(convert).async.via(delete).runWith(sink)
-
+  //  source.async.via(download).async.via(convert).async.via(delete).runWith(sink)
+  source.async.via(s3Service.download).runWith(Sink.foreach(println))
 }

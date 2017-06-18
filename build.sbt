@@ -15,6 +15,7 @@ libraryDependencies ++= Seq(
   "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % "0.3",
   "com.lightbend.akka" %% "akka-stream-alpakka-s3" % "0.9",
   "io.findify" %% "s3mock" % "0.2.2" % "test",
+  "org.docx4j" % "docx4j" % "3.3.4",
 
 
 
